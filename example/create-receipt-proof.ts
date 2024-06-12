@@ -8,5 +8,6 @@ async function main() {
   const proofer = new Proofer(providerUrl);
 
   const proof = await proofer.getReceiptProof(txHash);
+  console.log(proof);
 }
 main();
