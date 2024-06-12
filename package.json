@@ -1,0 +1,38 @@
+{
+  "name": "evm-proof",
+  "version": "0.0.1",
+  "description": "Utility libraby used for creating and verifying Merkle proofs",
+  "scripts": {
+    "test": "npm run test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/georgi-l95/evm-proof.git"
+  },
+  "keywords": [
+    "eth",
+    "proof",
+    "merkle",
+    "ethereum",
+    "evm",
+    "particia"
+  ],
+  "author": "georgi-l95",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/georgi-l95/evm-proof/issues"
+  },
+  "homepage": "https://github.com/georgi-l95/evm-proof#readme",
+  "dependencies": {
+    "@ethereumjs/evm": "^3.0.0",
+    "@ethereumjs/rlp": "^5.0.2",
+    "@ethereumjs/trie": "^6.2.0",
+    "@ethereumjs/tx": "^5.3.0",
+    "@ethereumjs/util": "^9.0.3",
+    "@types/node": "^20.14.2",
+    "ethers": "^6.13.0",
+    "js-sha3": "^0.9.3",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.5"
+  }
+}
