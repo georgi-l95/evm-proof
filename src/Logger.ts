@@ -2,8 +2,8 @@ import { VerboseLevel } from "./types/VerboseLevel";
 
 export class Logger {
   private readonly verboseLevel: VerboseLevel;
-  constructor(verboseLevel: VerboseLevel) {
-    this.verboseLevel = verboseLevel;
+  constructor(verboseLevel?: VerboseLevel) {
+    this.verboseLevel = verboseLevel ? verboseLevel : VerboseLevel.INFO;
   }
 
   public info(msg: string) {

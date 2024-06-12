@@ -1,24 +1,23 @@
-import { Trie } from "@ethereumjs/trie";
+import { Proof, Trie } from "@ethereumjs/trie";
 import { TransactionReceipt } from "ethers";
 import { JsonRpcProvider } from "ethers";
 import { Errors } from "./errors/ProoferErrors";
 import { Block } from "ethers";
-import { VerboseLevel } from "./types/VerboseLevel";
 import { Logger } from "./Logger";
 import { Utils } from "./utils/utils";
-import { Receipt } from "./Receipt";
+import { Options } from "./types/Options";
 
 export class Proofer {
   private readonly provider: JsonRpcProvider;
   private readonly logger: Logger;
 
-  constructor(url: string, verboseLevel: VerboseLevel) {
+  constructor(url: string, options?: Options) {
     this.provider = new JsonRpcProvider(url);
-    this.logger = new Logger(verboseLevel);
+    this.logger = new Logger(options?.verboseLevel);
   }
 
-  async createReceiptProof(txHash: string) {
-    this.logger.info(`Initiating receipt proof creation.`);
+  async getReceiptProof(txHash: string): Promise<Proof> {
+    this.logger.info(`Initiating receipt proof creation...`);
     const targetReceipt = await this.getTransactionReceipt(
       this.provider,
       txHash
@@ -27,18 +26,35 @@ export class Proofer {
 
     const block = await this.getBlock(this.provider, targetReceipt.blockHash);
     const txHashes = block.transactions;
+    const txHashesCount = txHashes.length;
+
     this.logger.info(`Block ${block.hash} was fetched succesfully.`);
+    this.logger.info(
+      `Collecting all ${txHashesCount} receipts from block ${block.number}...`
+    );
 
     const receipts = await this.getAllReceiptsInBlock(txHashes);
     const trie = new Trie();
 
-    receipts.map((receipt, index) => {
-      let path = Utils.encode(index);
-      let serializedReceipt = Utils.encode(Receipt.fromRpc(receipt));
+    receipts.map(async (receipt) => {
+      let path = Utils.encode(receipt.index);
+      let serializedReceipt = Utils.encodeReceipt(receipt, receipt.type);
+
       this.logger.debug(
-        `Serializing key ${path} and value ${serializedReceipt}`
+        `Serializing key ${path} and adding to trie together with value.`
       );
+      await trie.put(path, serializedReceipt);
     });
+    trie.checkpoint();
+    await trie.commit();
+
+    const transacitonIndexSerialized = Utils.encode(targetReceipt.index);
+    this.logger.info(
+      `Creating proof for receipt with transaction index ${transacitonIndexSerialized}`
+    );
+
+    const proof = await trie.createProof(transacitonIndexSerialized);
+    return proof;
   }
 
   private async getAllReceiptsInBlock(
