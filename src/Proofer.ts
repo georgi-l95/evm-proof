@@ -6,6 +6,7 @@ import { Block } from "ethers";
 import { Logger } from "./Logger";
 import { Utils } from "./utils/utils";
 import { Options } from "./types/Options";
+import { hexToBytes } from "@ethereumjs/util";
 
 export class Proofer {
   private readonly provider: JsonRpcProvider;
@@ -50,11 +51,44 @@ export class Proofer {
 
     const transacitonIndexSerialized = Utils.encode(targetReceipt.index);
     this.logger.info(
-      `Creating proof for receipt with transaction index ${transacitonIndexSerialized}`
+      `Creating proof for receipt with transaction index ${transacitonIndexSerialized}...`
     );
 
     const proof = await trie.createProof(transacitonIndexSerialized);
+    console.log(
+      await trie.verifyProof(
+        hexToBytes(block.receiptsRoot!),
+        transacitonIndexSerialized,
+        proof
+      )
+    );
     return proof;
+  }
+
+  async verifyReceiptProof(txHash: string, proof: Proof): Promise<boolean> {
+    this.logger.info(`Initiating receipt proof verification...`);
+    const targetReceipt = await this.getTransactionReceipt(
+      this.provider,
+      txHash
+    );
+    this.logger.info(`Receipt ${txHash} was fetched successfully.`);
+
+    const block = await this.getBlock(this.provider, targetReceipt.blockHash);
+
+    this.logger.info(`Block ${block.hash} was fetched succesfully.`);
+
+    const transacitonIndexSerialized = Utils.encode(targetReceipt.index);
+    this.logger.info(
+      `Verifying proof for receipt with transaction index ${transacitonIndexSerialized}...`
+    );
+
+    const value = await new Trie().verifyProof(
+      hexToBytes(block.receiptsRoot!),
+      transacitonIndexSerialized,
+      proof
+    );
+
+    return value ? true : false;
   }
 
   private async getAllReceiptsInBlock(
