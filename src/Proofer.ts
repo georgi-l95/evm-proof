@@ -55,17 +55,13 @@ export class Proofer {
     );
 
     const proof = await trie.createProof(transacitonIndexSerialized);
-    console.log(
-      await trie.verifyProof(
-        hexToBytes(block.receiptsRoot!),
-        transacitonIndexSerialized,
-        proof
-      )
-    );
     return proof;
   }
 
-  async verifyReceiptProof(txHash: string, proof: Proof): Promise<boolean> {
+  async verifyReceiptProof(
+    txHash: string,
+    proof: Proof
+  ): Promise<Uint8Array | null> {
     this.logger.info(`Initiating receipt proof verification...`);
     const targetReceipt = await this.getTransactionReceipt(
       this.provider,
@@ -88,7 +84,7 @@ export class Proofer {
       proof
     );
 
-    return value ? true : false;
+    return value;
   }
 
   private async getAllReceiptsInBlock(
